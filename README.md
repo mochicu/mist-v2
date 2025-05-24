@@ -6,15 +6,15 @@
 </p>
 
 
-[![project page](https://img.shields.io/badge/homepage-psyker--team.io-blue.svg)](https://psyker-team.github.io/index_en.html)
+<!-- [![project page](https://img.shields.io/badge/homepage-psyker--team.io-blue.svg)](https://psyker-team.github.io/index_en.html)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1k5tLNsWTTAkOlkl5d9llf93bJ6csvMuZ?usp=sharing)
-[![One-click Package](https://img.shields.io/badge/-Google_Drive-1A73E8.svg?style=flat&logo=Google-Drive&logoColor=white)](https://drive.google.com/drive/folders/1vg8oK2BUOla5adaJcFYx5QMq0-MoP8kk?usp=drive_link)
+[![One-click Package](https://img.shields.io/badge/-Google_Drive-1A73E8.svg?style=flat&logo=Google-Drive&logoColor=white)](https://drive.google.com/drive/folders/1vg8oK2BUOla5adaJcFYx5QMq0-MoP8kk?usp=drive_link) -->
 
 <!-- [![arXiv](https://img.shields.io/badge/arXiv-2310.04687-red.svg)](https://arxiv.org/abs/2310.04687) -->
-<!-- 
+<!--
 [![document](https://img.shields.io/badge/document-passing-light_green.svg)](https://arxiv.org/abs/2310.04687)
 -->
-<!-- 
+<!--
 ### [project page](https://mist-project.github.io) | [arxiv](https://arxiv.org/abs/2310.04687) | [document](https://arxiv.org/abs/2310.04687) -->
 
 <!-- #region -->
@@ -22,7 +22,7 @@
 <img  src="effect_show.png">
 </p> -->
 <!-- #endregion -->
-<!-- 
+<!--
 > Mist adds watermarks to images, making them unrecognizable and unusable for AI-for-Art models that try to mimic them. -->
 
 <!-- #region -->
@@ -35,7 +35,7 @@
 <!-- #endregion -->
 
 > Mist's Effects in User Cases. **The first row:** Lora generation from source images.
-**The second row:** Lora generation from Mist-treated samples. Mist V2 significantly disrupts the output of the generation, effectively protecting artists' images. Used images are from anonymous artists. All rights reserved. 
+**The second row:** Lora generation from Mist-treated samples. Mist V2 significantly disrupts the output of the generation, effectively protecting artists' images. Used images are from anonymous artists. All rights reserved.
 <!-- #region -->
 <!-- <p align="center">
 <img  src="robustness.png">
@@ -62,7 +62,7 @@ will be ineffective, and the output image of such mimicry will be scrambled and 
 <img  src="assets/effect_show.png">
 </p>
 
-**Updates of version 2.1.0**: 
+**Updates of version 2.1.0**:
 - Enhanced protection against AI-for-Art applications like Lora and SDEdit
 - Imperceptible noise.
 - 3-5 minutes processing with only 6GB of GPU memory in most cases. CPU processing supported.
@@ -82,18 +82,18 @@ We provide two approaches for you to deploy Mist-v2:
 - **Free version for local deployment**: If your system is Windows and it has an Nvidia GPU with more than 6GB VRAM, you can download our free version pack (i.e. no need for installation, runnable after downloading) from [Google Drive](https://drive.google.com/drive/folders/1vg8oK2BUOla5adaJcFYx5QMq0-MoP8kk?usp=drive_link). This is the safest and most flexible way to deploy and run Mist-v2.
 We provide a [guideline](docs/Handbook-Free-version.md) about how to deploy and run.
 
-- **Colab Notebook**: If your system is MacOS or you do not own proper Nvidia GPUs, you can run Mist with our [Colab Notebook](https://colab.research.google.com/drive/1k5tLNsWTTAkOlkl5d9llf93bJ6csvMuZ?usp=sharing) on free GPU resources provided by Google (Thank you Google). The Notebook is **self-instructed**. 
+- **Colab Notebook**: If your system is MacOS or you do not own proper Nvidia GPUs, you can run Mist with our [Colab Notebook](https://colab.research.google.com/drive/1k5tLNsWTTAkOlkl5d9llf93bJ6csvMuZ?usp=sharing) on free GPU resources provided by Google (Thank you Google). The Notebook is **self-instructed**.
 
 ### For developers
 
 If you want to build Mist-v2 from source code, we also provide the instruction as follows:
 
-<details><summary> (click-to-expand)  
+<details><summary> (click-to-expand)
  </summary>
 
 #### Environment
 
-**Preliminaries:** To run this repository, please have [Anaconda](https://pytorch.org/) installed in your work station. The GPU version of Mist requires a NVIDIA GPU in [Ampere](https://en.wikipedia.org/wiki/Ampere_(microarchitecture)) or more advanced architecture with more than 6GB VRAM. You can also try the CPU version 
+**Preliminaries:** To run this repository, please have [Anaconda](https://pytorch.org/) installed in your work station. The GPU version of Mist requires a NVIDIA GPU in [Ampere](https://en.wikipedia.org/wiki/Ampere_(microarchitecture)) or more advanced architecture with more than 6GB VRAM. You can also try the CPU version
 in a moderate running speed.
 
 Clone this repository to your local and get into the repository root:
@@ -147,19 +147,19 @@ python mist-webui.py
 
 #### Evaluation
 
-This repo provides a simple pipeline to evaluate the output adversarial examples. 
+This repo provides a simple pipeline to evaluate the output adversarial examples.
 
-Basically, this pipeline trains a LoRA on the adversarial examples and samples images with the LoRA. 
-Note that our adversarial examples may induce LoRA to output images with NSFW contents 
+Basically, this pipeline trains a LoRA on the adversarial examples and samples images with the LoRA.
+Note that our adversarial examples may induce LoRA to output images with NSFW contents
 (for example, chaotic texture). As stated, this is to prevent LoRA training on unauthorized image data. To evaluate the effectiveness of our method, we disable the safety checker in the LoRA sampling script. Following is the instruction to run the pipeline.
 
-First, train a LoRA on the output adversarial examples. 
+First, train a LoRA on the output adversarial examples.
 
 ```bash
 accelerate launch eval/train_dreambooth_lora_15.py --instance_data_dir=$LORA_INPUT_DIR --output_dir=$LORA_OUTPUT_DIR --class_data_dir=$LORA_CLASS_DIR --instance_prompt $LORA_PROMPT --class_prompt $LORA_CLASS_PROMPT --resolution=512 --train_batch_size=1 --learning_rate=1e-4 --scale_lr --max_train_steps=2000
 ```
 
-Detailed demonstration of the parameters:  
+Detailed demonstration of the parameters:
 
 
 | Parameter          | Explanation                                                                                                |
@@ -171,7 +171,7 @@ Detailed demonstration of the parameters:
 | $LORA_CLASS_PROMPT | Prompt used to generate class data, recommended to be related to $LORA_PROMPT.                             |
 
 
-Next, open the `eval/sample_lora_15.ipynb` and run the first block. After that, change the value of the variable `LORA_OUTPUT_DIR` to be the previous `$LORA_OUTPUT_DIR` when training the LoRA. 
+Next, open the `eval/sample_lora_15.ipynb` and run the first block. After that, change the value of the variable `LORA_OUTPUT_DIR` to be the previous `$LORA_OUTPUT_DIR` when training the LoRA.
 
 ```Python
 from lora_diffusion import tune_lora_scale, patch_pipe
@@ -197,7 +197,7 @@ Finally, run the second block to see the output and evaluate the performance of 
 
 ## Contribute & Contact
 
-Mist is an open-source project and we sincerely welcome contributions. Apart from Mist, we are broadly interested in the ethics, copyright, and trustworthy concerns of new-generation AIGC. If you have good ideas on these topics, feel free to contact us through our e-mail: [mist202304@gmail.com](mist202304@gmail.com). 
+Mist is an open-source project and we sincerely welcome contributions. Apart from Mist, we are broadly interested in the ethics, copyright, and trustworthy concerns of new-generation AIGC. If you have good ideas on these topics, feel free to contact us through our e-mail: [mist202304@gmail.com](mist202304@gmail.com).
 
 
 ## A Glimpse to Methodology
@@ -224,14 +224,14 @@ $$ \underset{x'}{min} \mathbb{E} {(z_0', \epsilon,t)}  \Vert \epsilon_\theta(z'_
 
 Intuitively, Mist-v2 guides the gradient predicted by the diffusion model to a fixed and directed error. When finetuned on the Misted
 images, the model tries to fix this error by adding a fixed counteracting bias to its prediction. This bias will be adopted as parts of
-the pattern learned by finetuning. The finetuned model will also add the fixed bias in their sampling process, resulting in chaotic texture in the output images. 
+the pattern learned by finetuning. The finetuned model will also add the fixed bias in their sampling process, resulting in chaotic texture in the output images.
 
 
 ## License
 
 This project is licensed under the Apache-2.0 license. Additionally, we forbid any unauthorized commercial use. Mist series will be permanently free and open-sourced. Currently, we do not cooperate with any person or organization for commercial purpose.
 
- 
+
 ## Citation
 
 If you find this repo useful, we kindly suggest you to cite our paper.
@@ -243,7 +243,7 @@ If you find this repo useful, we kindly suggest you to cite our paper.
   year={2023}
 }
 ```
-Additionally, Mist-v2 benefits from the following papers. Their ideas and results inspire us to dive into the mechanism why adversarial attacks work on latent diffusion models. We kindly suggest you to cite them if possible. 
+Additionally, Mist-v2 benefits from the following papers. Their ideas and results inspire us to dive into the mechanism why adversarial attacks work on latent diffusion models. We kindly suggest you to cite them if possible.
 
 ```
 @inproceedings{liang2023adversarial,
@@ -283,9 +283,3 @@ Additionally, Mist-v2 benefits from the following papers. Their ideas and result
   year={2023}
 }
 ```
-
-
-
-
-
-

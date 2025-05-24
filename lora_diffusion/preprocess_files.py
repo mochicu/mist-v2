@@ -7,7 +7,6 @@ import os
 from PIL import Image, ImageFilter
 import torch
 import numpy as np
-import fire
 from tqdm import tqdm
 import glob
 from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
@@ -321,7 +320,3 @@ def load_and_save_masks_and_captions(
             mask.save(os.path.join(output_dir, f"{idx}.mask.png"))
 
             f.write(caption + "\n")
-
-
-def main():
-    fire.Fire(load_and_save_masks_and_captions)

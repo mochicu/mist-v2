@@ -411,7 +411,7 @@ def train_one_epoch(
                 unet.train()
                 text_encoder.train()
 
-                random.seed(time.time())
+                # random.seed(time.time())
                 instance_idx = random.randint(0, len(train_dataset)-1)
                 step_data = train_dataset[instance_idx]
                 pixel_values = torch.stack([step_data["instance_images"], step_data["class_images"]])
@@ -465,7 +465,7 @@ def train_one_epoch(
             unet.train()
             text_encoder.train()
 
-            random.seed(time.time())
+            # random.seed(time.time())
             instance_idx = random.randint(0, len(train_dataset)-1)
             step_data = train_dataset[instance_idx]
             pixel_values = torch.stack([step_data["instance_images"], step_data["class_images"]])
@@ -779,7 +779,8 @@ def main(args):
     vae.to(accelerator.device, dtype=weight_dtype)
     vae.requires_grad_(False)
     vae.encoder.training = True
-    vae.encoder.gradient_checkpointing = True
+    # vae.encoder.gradient_checkpointing = True
+    vae.enable_gradient_checkpointing()
 
     #print info about train_text_encoder
 
