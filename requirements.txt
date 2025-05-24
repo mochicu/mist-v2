@@ -4,13 +4,9 @@ diffusers
 transformers
 datasets
 accelerate
-gradio
-ftfy
 tensorboard
-Jinja2
 tqdm
 scipy
-fire
 wandb
 safetensors
 opencv-python
@@ -18,6 +14,5 @@ mediapipe
 pynvml
 cache
 xformers
-colorama
 torchmetrics
 --extra-index-url https://download.pytorch.org/whl/cu118

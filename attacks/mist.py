@@ -7,10 +7,8 @@ import os
 import sys
 import gc
 from pathlib import Path
-from colorama import Fore, Style, init,Back
 import random, time
-'''some system level settings'''
-init(autoreset=True)
+
 sys.path.insert(0, sys.path[0]+"/../")
 
 import datasets
@@ -23,8 +21,7 @@ import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import set_seed
-from diffusers import AutoencoderKL, DDPMScheduler, DiffusionPipeline, UNet2DConditionModel,DDIMScheduler
-from diffusers.utils.import_utils import is_xformers_available
+from diffusers import AutoencoderKL, DiffusionPipeline, UNet2DConditionModel,DDIMScheduler
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -32,7 +29,6 @@ from tqdm.auto import tqdm
 from torch.cuda.amp import GradScaler, autocast
 from transformers import AutoTokenizer, PretrainedConfig
 from torch import autograd
-from typing import Optional, Tuple
 import pynvml
 # from utils import print_tensor
 
@@ -159,7 +155,7 @@ class DreamBoothDatasetFromTensor(Dataset):
         self.size = size
         self.center_crop = center_crop
         self.tokenizer = tokenizer
-        
+
         self.instance_images_tensor = instance_images_tensor
         self.instance_prompts = prompts
         self.num_instance_images = len(self.instance_images_tensor)
@@ -309,7 +305,7 @@ def train_one_epoch(
     noise_scheduler,
     vae,
     data_tensor: torch.Tensor,
-    prompts, 
+    prompts,
     weight_dtype=torch.bfloat16,
 ):
     # prepare training data
@@ -360,7 +356,7 @@ def train_one_epoch(
                     _up.to(dtype=torch.float32)
                     _down.to(dtype=torch.float32)
     else:
-        unet_lora_params = [] 
+        unet_lora_params = []
         for _up, _down in extract_lora_ups_down(unet):
             if weight_dtype == torch.float16:
                 _up.to(dtype=torch.float32)
@@ -375,7 +371,7 @@ def train_one_epoch(
                     _down.to(dtype=torch.float32)
                 text_encoder_lora_params.append(_up.parameters())
                 text_encoder_lora_params.append(_down.parameters())
-    
+
     # build the optimizer
     optimizer_class = torch.optim.AdamW
 
@@ -388,7 +384,7 @@ def train_one_epoch(
     params_to_optimize = (
         [
             {
-                "params": itertools.chain(*unet_lora_params), 
+                "params": itertools.chain(*unet_lora_params),
                 "lr": args.learning_rate},
             {
                 "params": itertools.chain(*text_encoder_lora_params),
@@ -455,7 +451,7 @@ def train_one_epoch(
                         print(f"==loss - image index {instance_idx}, loss: {loss.detach().item() / args.prior_loss_weight}, prior")
                     else:
                         print(f"==loss - image index {instance_idx}, loss: {loss.detach().item()}, instance")
-                        
+
                 params_to_clip = (
                             itertools.chain(unet.parameters(), text_encoder.parameters())
                             if args.train_text_encoder
@@ -509,7 +505,7 @@ def train_one_epoch(
                     print(f"==loss - image index {instance_idx}, loss: {loss.detach().item() / args.prior_loss_weight}, prior")
                 else:
                     print(f"==loss - image index {instance_idx}, loss: {loss.detach().item()}, instance")
-                    
+
             params_to_clip = (
                         itertools.chain(unet.parameters(), text_encoder.parameters())
                         if args.train_text_encoder
@@ -518,7 +514,7 @@ def train_one_epoch(
             torch.nn.utils.clip_grad_norm_(params_to_clip, 1.0, error_if_nonfinite=True)
             optimizer.step()
             optimizer.zero_grad()
-    
+
     return [unet, text_encoder]
 
 
@@ -583,7 +579,7 @@ def pgd_attack(
             # Sample a random timestep for each image
             timesteps = torch.randint(0, noise_scheduler.config.num_train_timesteps, (bsz,), device=latents.device)
             timesteps = timesteps.long()
-            
+
             # Add noise to the latents according to the noise magnitude at each timestep
             # (this is the forward diffusion process)
             noisy_latents = noise_scheduler.add_noise(latents, noise, timesteps)
@@ -613,9 +609,9 @@ def pgd_attack(
                     # fused mode
                     if args.mode == 'fused':
                         loss = -torch.sum(model_pred.float() * target.float())
-                        
+
                         latent_attack = LatentAttack()
-                        loss = loss - 1e2 * latent_attack(latents, target_tensor=target_tensor)            
+                        loss = loss - 1e2 * latent_attack(latents, target_tensor=target_tensor)
 
             loss = loss / args.gradient_accumulation_steps
             grads = autograd.grad(loss, latents)[0].detach().clone()
@@ -625,7 +621,7 @@ def pgd_attack(
             perturbed_image.requires_grad = True
             gc_latents = vae.encode(perturbed_image.to(device, dtype=weight_dtype)).latent_dist.mean
             gc_latents.backward(gradient=grads)
-            
+
             if step % args.gradient_accumulation_steps == args.gradient_accumulation_steps - 1:
                 alpha = args.pgd_alpha
                 adv_images = perturbed_image + alpha * perturbed_image.grad.sign()
@@ -634,7 +630,7 @@ def pgd_attack(
                 perturbed_image = torch.clamp(original_image + eta, min=-1, max=+1).detach_()
                 perturbed_image.requires_grad = True
 
-                    
+
             #print(f"PGD loss - step {step}, loss: {loss.detach().item()}")
 
         image_list.append(perturbed_image.detach().clone().squeeze(0))
@@ -642,7 +638,7 @@ def pgd_attack(
 
 
     return outputs
-    
+
 def main(args):
     if args.cuda:
         try:
@@ -769,7 +765,7 @@ def main(args):
         revision=args.revision,
         use_fast=False,
     )
-    
+
 
     noise_scheduler = DDIMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler")
     if not args.cuda:
@@ -786,7 +782,7 @@ def main(args):
     vae.encoder.gradient_checkpointing = True
 
     #print info about train_text_encoder
-    
+
     if not args.train_text_encoder:
         text_encoder.requires_grad_(False)
 
@@ -821,7 +817,7 @@ def main(args):
         del target_image_tensor
         #target_latent_tensor = target_latent_tensor.repeat(len(perturbed_data), 1, 1, 1).cuda()
     f = [unet, text_encoder]
-    for i in range(args.max_train_steps):        
+    for i in range(args.max_train_steps):
         f_sur = copy.deepcopy(f)
         perturbed_data = pgd_attack(
             args,
@@ -850,8 +846,8 @@ def main(args):
             prompts,
             weight_dtype,
         )
-        
-        
+
+
         if args.cuda:
             gc.collect()
             pynvml.nvmlInit()
@@ -873,9 +869,9 @@ def main(args):
                     filename = filename.split('.')[0] + '.png'
                     img_names.append(str(filename))
             for img_pixel, ori_img_pixel, img_name, img_size in zip(noised_imgs, origin_imgs, img_names, data_sizes):
-                
+
                 save_path = os.path.join(save_folder, f"{i+1}_noise_{img_name}")
-                
+
                 if not args.resize:
                     Image.fromarray(
                         (img_pixel * 127.5 + 128).clamp(0, 255).to(torch.uint8).permute(1, 2, 0).numpy()
@@ -890,7 +886,7 @@ def main(args):
                     perturbed_img_duzzy = np.array(Image.fromarray(
                         (img_pixel * 127.5 + 128).clamp(0, 255).to(torch.uint8).permute(1, 2, 0).numpy()
                     ).resize(img_size), dtype=np.int32)
-                    
+
                     perturbation = perturbed_img_duzzy - ori_img_duzzy
                     assert perturbation.shape == ori_img.shape
 
@@ -905,4 +901,3 @@ def main(args):
 if __name__ == "__main__":
     args = parse_args()
     main(args)
-
