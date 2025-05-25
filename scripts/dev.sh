@@ -2,7 +2,7 @@ export MODEL_NAME="stable-diffusion/stable-diffusion-1-5"
 export INSTANCE_DIR="data/training/sangdelan"
 export OUTPUT_DIR="output/mist/sd1-5/test"
 export CLASS_DIR="data/class"
- 
+
 accelerate launch attacks/mist.py \
  --cuda --low_vram_mode --resize \
  --pretrained_model_name_or_path=$MODEL_NAME  \

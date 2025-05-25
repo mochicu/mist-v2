@@ -1,13 +1,16 @@
+import os
+
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
 import argparse
 import copy
 import hashlib
 import itertools
 import logging
-import os
 import sys
 import gc
 from pathlib import Path
-import random, time
+import random
 
 sys.path.insert(0, sys.path[0]+"/../")
 
@@ -16,7 +19,6 @@ import diffusers
 import numpy as np
 import torch
 import torch.nn.functional as F
-import torch.utils.checkpoint
 import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
@@ -134,7 +136,7 @@ def parse_args(input_args=None):
     if args.output_dir != "":
         if not os.path.exists(args.output_dir):
             os.makedirs(args.output_dir, exist_ok=True)
-            print(Back.BLUE + Fore.GREEN + 'create output dir: {}'.format(args.output_dir))
+            print('create output dir: {}'.format(args.output_dir))
 
     return args
 
@@ -188,7 +190,7 @@ class DreamBoothDatasetFromTensor(Dataset):
         example = {}
         instance_image = self.instance_images_tensor[index % self.num_instance_images]
         instance_prompt = self.instance_prompts[index % self.num_instance_images]
-        if instance_prompt == None:
+        if instance_prompt is None:
             instance_prompt = self.instance_prompt
         instance_prompt = \
             'masterpiece,best quality,extremely detailed CG unity 8k wallpaper,illustration,cinematic lighting,beautiful detailed glow' + instance_prompt
@@ -229,10 +231,6 @@ def import_model_class_from_model_name_or_path(pretrained_model_name_or_path: st
         from transformers import CLIPTextModel
 
         return CLIPTextModel
-    elif model_class == "RobertaSeriesModelWithTransformation":
-        from diffusers.pipelines.alt_diffusion.modeling_roberta_series import RobertaSeriesModelWithTransformation
-
-        return RobertaSeriesModelWithTransformation
     else:
         raise ValueError(f"{model_class} is not supported.")
 
@@ -254,10 +252,10 @@ class PromptDataset(Dataset):
         return example
 
 
-def load_data(data_dir, size=512, center_crop=True) -> torch.Tensor:
+def load_data(data_dir) -> torch.Tensor:
     image_transforms = transforms.Compose(
         [
-            transforms.Resize((size,size), interpolation=transforms.InterpolationMode.BILINEAR),
+            # transforms.Resize((size,size), interpolation=transforms.InterpolationMode.BILINEAR),
             # transforms.Resize(size, interpolation=transforms.InterpolationMode.BILINEAR),
             # transforms.CenterCrop(size) if center_crop else transforms.RandomCrop(size),
             transforms.ToTensor(),
@@ -684,6 +682,9 @@ def main(args):
         diffusers.utils.logging.set_verbosity_error()
 
     if args.seed is not None:
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True, warn_only=False)
         set_seed(args.seed)
 
     weight_dtype = torch.float32
@@ -779,10 +780,7 @@ def main(args):
     vae.to(accelerator.device, dtype=weight_dtype)
     vae.requires_grad_(False)
     vae.encoder.training = True
-    # vae.encoder.gradient_checkpointing = True
     vae.enable_gradient_checkpointing()
-
-    #print info about train_text_encoder
 
     if not args.train_text_encoder:
         text_encoder.requires_grad_(False)
@@ -790,11 +788,7 @@ def main(args):
     if args.allow_tf32:
         torch.backends.cuda.matmul.allow_tf32 = True
 
-    perturbed_data, prompts, data_sizes = load_data(
-        args.instance_data_dir,
-        size=args.resolution,
-        center_crop=args.center_crop,
-    )
+    perturbed_data, prompts, data_sizes = load_data(args.instance_data_dir)
     original_data = perturbed_data.clone()
     original_data.requires_grad_(False)
 
