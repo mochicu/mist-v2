@@ -9,6 +9,7 @@ dependencies = [
     "diffusers",
     "mediapipe",
     "opencv-python",
+    "pillow",
     "pynvml",
     "safetensors",
     "scipy",
